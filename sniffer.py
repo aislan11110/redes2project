@@ -3,9 +3,14 @@ import struct
 import textwrap
 
 def main():
-    rip = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+    host = socket.gethostbyname(socket.gethostname())
+    rip = socket.socket(socket.AF_INET, socket.SOCK_RAW)
+    rip.bind((host,0))
+  #  rip.setsockopt(socket.IPPROTO_IP,socket.IP_HDRINCL,1)
+    rip.ioctl(socket.SIO_RCVALL,socket.RCVALL_ON)
     while True:
-        raw_data, addr = rip.recvfrom(65536)
+        package = rip.recvfrom(65565)
+        raw_data, addr = package
         dest_mac, rem_mac, tipproto, data = frame_ethernet(raw_data)
         print('\n Ethernet Frame:')
         print('Destination: {}, Source: {}, Protocol: {}'.format(dest_mac, rem_mac, tipproto))
