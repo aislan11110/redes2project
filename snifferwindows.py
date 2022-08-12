@@ -72,8 +72,15 @@ def main():
 
 
 def frame_ethernet(data):
+    ip_header = data[0:20]
+    iph = struct.unpack('!BBHHHBBH4s4s',ip_header)
+    versão_ihl = iph[0]
+    versão = versão_ihl >> 4
+
+    s_addr = iph[8]
+    d_addr = iph[9]
     destinação_mac, remetente_mac, tipoprotocolo = struct.unpack('! 6s 6s H',data[:14])
-    return get_mac_addr(destinação_mac), get_mac_addr(remetente_mac), socket.htons(tipoprotocolo),data[:14]
+    return get_mac_addr(destinação_mac), get_mac_addr(remetente_mac), socket.htons(tipoprotocolo),data[14:]
 
 
 def get_mac_addr(bytes_addr):
