@@ -5,7 +5,7 @@ import textwrap
 
 def main():
     host = socket.gethostbyname(socket.gethostname())
-    rip = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
+    rip = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.ntohs(0x0003))
     rip.bind((host, 0))
     rip.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
     rip.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
@@ -118,7 +118,6 @@ def ipv4(data):
 
 def frame_ethernet(data):
     eth_length = 14
-
     eth_header = data[:eth_length]
     eth = struct.unpack('6s6sH', eth_header)
     protocolo_ethernet = socket.ntohs(eth[2])
