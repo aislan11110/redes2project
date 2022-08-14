@@ -4,19 +4,23 @@ import textwrap
 
 
 def main():
-    host = socket.gethostbyname(socket.gethostname())
-    rip = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.ntohs(0x0003))
-    rip.bind((host, 0))
-    rip.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-    rip.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
-    while True:
+  #  host = socket.gethostbyname(socket.gethostname())
+    rip = socket.socket(socket.AF_PACKET, socket.SOCK_RAW,
+                        socket.ntohs(0x0003)
+                        #socket.IPPROTO_IP
+                        )
+   # rip.bind((host, 0))
+    #rip.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+   # rip.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
+    x=0
+    while x!=10:
         raw_data = rip.recvfrom(65565)
-        raw_data = raw_data[0]
+        raw_data2 = raw_data[0]
         #cabeçalho Ethernet
-        destino_mac, source_mac, protocolo_eth, eth_length = frame_ethernet(raw_data)
+        destino_mac, source_mac, protocolo_eth, eth_length = frame_ethernet(raw_data2)
         #print abaixo
-        print("destino_mac: {}, fonte_mac: {}, protocolo: {}",destino_mac,source_mac,protocolo_eth)
-        if protocolo_eth==8 :
+        print('destino_mac: {}, fonte_mac: {}, protocolo: {}'.format(destino_mac,source_mac,protocolo_eth))
+        if protocolo_eth== 8 :
             #cabeçalho ip
             (versão,iph_tamanho,ttl,protocolo,source_addr,destination_addr)\
                 = ipv4(raw_data[eth_length:20+eth_length])
@@ -70,6 +74,8 @@ def main():
             else :
                 print("protocolo diferente de TCP/UDP/ICMP")
 
+        x=x+1
+
     print()
 
 
@@ -119,13 +125,16 @@ def ipv4(data):
 def frame_ethernet(data):
     eth_length = 14
     eth_header = data[:eth_length]
-    eth = struct.unpack('6s6sH', eth_header)
-    protocolo_ethernet = socket.ntohs(eth[2])
-    destino_mac = data[0:6]
-        #eth_addr(data[0:6])
-    source_mac = data[6:12]
-        #eth_addr(data[6:12])
+    eth = struct.unpack('! 6s 6s H', eth_header)
+    protocolo_ethernet = socket.htons(eth[2])
+    destino_mac = get_mac_addr(data[0:6])
+    source_mac =  get_mac_addr(data[6:12])
     return destino_mac,source_mac,protocolo_ethernet, eth_length
+
+def get_mac_addr(bytes_addr):
+    bytes_str = map ('{:02x}'.format,bytes_addr)
+    mac_addr = ':'.join(bytes_str).upper()
+    return mac_addr
 
 def eth_addr (a) :
   b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
