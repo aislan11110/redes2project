@@ -13,7 +13,7 @@ def main():
     rip.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
     rip.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
     x=0
-    while x!=10:
+    while x!=20:
         raw_data = rip.recvfrom(65565)
         raw_data2 = raw_data[0]
         #cabeçalho Ethernet
@@ -70,7 +70,7 @@ def main():
                 print(data)
             else :
                 print("protocolo diferente de TCP/UDP/ICMP")
-
+        print()
         x=x+1
 
     print()
