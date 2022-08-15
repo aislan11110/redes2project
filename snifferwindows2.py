@@ -14,7 +14,7 @@ def main():
     rip.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
     x=0
     while x!=20:
-        raw_data = rip.recvfrom(65565)
+        raw_data = rip.recvfrom(65535)
         raw_data2 = raw_data[0]
         #cabeçalho Ethernet
        # destino_mac, source_mac, protocolo_eth, eth_length = frame_ethernet(raw_data2)
