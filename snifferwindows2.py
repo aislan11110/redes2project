@@ -17,7 +17,7 @@ def main():
         raw_data = rip.recvfrom(65535)
         raw_data2 = raw_data[0]
         #cabeçalho Ethernet
-       # destino_mac, source_mac, protocolo_eth, eth_length = frame_ethernet(raw_data2)
+        #destino_mac, source_mac, protocolo_eth, eth_length = frame_ethernet(raw_data2)
         #print abaixo
         #print('destino_mac: {}, fonte_mac: {}, protocolo: {}'.format(destino_mac,source_mac,protocolo_eth))
         protocolo_eth =8
@@ -133,9 +133,6 @@ def get_mac_addr(bytes_addr):
     mac_addr = ':'.join(bytes_str).upper()
     return mac_addr
 
-def eth_addr (a) :
-  b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
-  return b
 
 def formatomultilinha(prefix,string, size=80):
     size -= len(prefix)
