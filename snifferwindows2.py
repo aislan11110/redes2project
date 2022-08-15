@@ -4,43 +4,44 @@ import textwrap
 
 
 def main():
-  #  host = socket.gethostbyname(socket.gethostname())
-    rip = socket.socket(socket.AF_PACKET, socket.SOCK_RAW,
-                        socket.ntohs(0x0003)
-                        #socket.IPPROTO_IP
+    host = socket.gethostbyname(socket.gethostname())
+    rip = socket.socket(socket.AF_INET, socket.SOCK_RAW,
+                        #socket.ntohs(0x0003)
+                        socket.IPPROTO_IP
                         )
-   # rip.bind((host, 0))
-    #rip.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-   # rip.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
+    rip.bind((host, 0))
+    rip.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+    rip.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
     x=0
     while x!=10:
         raw_data = rip.recvfrom(65565)
         raw_data2 = raw_data[0]
         #cabeçalho Ethernet
-        destino_mac, source_mac, protocolo_eth, eth_length = frame_ethernet(raw_data2)
+       # destino_mac, source_mac, protocolo_eth, eth_length = frame_ethernet(raw_data2)
         #print abaixo
-        print('destino_mac: {}, fonte_mac: {}, protocolo: {}'.format(destino_mac,source_mac,protocolo_eth))
+        #print('destino_mac: {}, fonte_mac: {}, protocolo: {}'.format(destino_mac,source_mac,protocolo_eth))
+        protocolo_eth =8
+        eth_length=0
         if protocolo_eth== 8 :
             #cabeçalho ip
             (versão,iph_tamanho,ttl,protocolo,source_addr,destination_addr)\
-                = ipv4(raw_data[eth_length:20+eth_length])
+                = ipv4(raw_data2[:20])
+            restodosdados= raw_data2[20:]
             #print abaixo
             print("IPV4:")
             print("versão:{}, tamanho do cabeçalho IP: {}, tempo de vida: {}, protocolo: {},"
-                  "endereço fonte: {}, endereço destino: {}",
-                  versão,iph_tamanho,ttl,protocolo,source_addr,destination_addr)
+                  "endereço fonte: {}, endereço destino: {}".format(
+                  versão,iph_tamanho,ttl,protocolo,source_addr,destination_addr))
 
             #Pacote TCP
             if protocolo==6 :
                 (porta_fonte,porta_destino,sequencia,reconhecimento,tcph_tamanho)\
-                    =protocolo_TCP(raw_data[eth_length+iph_tamanho:eth_length+iph_tamanho+20])
-                header_size=eth_length+iph_tamanho+tcph_tamanho * 4
-                data_size = len(raw_data) - header_size
-                data = raw_data[header_size:]
+                    =protocolo_TCP(restodosdados[:20])
+                data = restodosdados[20:]
                 #print abaixo
                 print("Pacote TCP:")
-                print("Porta fonte: {}, Porta destino: {}, Sequencia numerica: {}, reconhecimento: {}, Tamanho do cabeçalho TCP: {}",
-                      porta_fonte,porta_destino,sequencia,reconhecimento,tcph_tamanho)
+                print("Porta fonte: {}, Porta destino: {}, Sequencia numerica: {}, reconhecimento: {}, Tamanho do cabeçalho TCP: {}".format(
+                      porta_fonte,porta_destino,sequencia,reconhecimento,tcph_tamanho))
                 print()
                 print(data)
 
@@ -48,27 +49,23 @@ def main():
             #Pacote ICMP
             elif protocolo == 1 :
                 (icmp_tipo,codigo,checksum)\
-                    =protocolo_ICMP(raw_data[eth_length+iph_tamanho:eth_length+iph_tamanho+4])
-                header_size = eth_length+iph_tamanho+4
-                data_size = len(raw_data) - header_size
-                data = raw_data[header_size:]
+                    =protocolo_ICMP(restodosdados[:4])
+                data = restodosdados[4:]
                 #print abaixo
                 print("Pacote ICMP:")
-                print("Tipo: {}, codigo: {}, checksum: {}",icmp_tipo,codigo,checksum)
+                print("Tipo: {}, codigo: {}, checksum: {}".format(icmp_tipo,codigo,checksum))
                 print()
                 print(data)
 
             #Pacote UDP
             elif protocolo == 17:
                 (porta_fonte,porta_destino,udp_tamanho,checksum)\
-                    =protocolo_UDP(raw_data[eth_length+iph_tamanho:eth_length+iph_tamanho+8])
-                header_size = eth_length+iph_tamanho+udp_tamanho
-                data_size = len(raw_data)-header_size
-                data = raw_data[header_size:]
+                    =protocolo_UDP(restodosdados[:8])
+                data = raw_data2[8:]
                 #print abaixo
                 print("Pacote UDP:")
-                print("Porta fonte: {}, porta destino: {}, tamanho: {}, checksum: {}",
-                      porta_fonte,porta_destino,udp_tamanho,checksum)
+                print("Porta fonte: {}, porta destino: {}, tamanho: {}, checksum: {}".format(
+                      porta_fonte,porta_destino,udp_tamanho,checksum))
                 print()
                 print(data)
             else :
