@@ -55,7 +55,7 @@ def printprotocolo(restodosdados,protocolo):
         # print abaixo
         print("Pacote TCP:")
         print(
-            "Porta fonte: {}, Porta destino: {}, Sequencia numerica: {}, reconhecimento: {}, Tamanho do cabeçalho TCP: {}".format(
+            "Porta fonte: {}, Porta destino: {}, Sequencia numerica: {}, reconhecimento: {}, Offset: {}".format(
                 porta_fonte, porta_destino, sequencia, reconhecimento, tcph_tamanho))
         print()
         print(data)
@@ -116,7 +116,7 @@ def protocolo_TCP(data):
     reconhecimento = tcph[3]
     offset_reservado = tcph[4]
     tcph_tamanho = offset_reservado >> 4
-    return porta_fonte,porta_destino,sequencia,reconhecimento, tcph_tamanho
+    return porta_fonte,porta_destino,sequencia,reconhecimento, tcph_tamanho   #tcph_tamanho= offset errei!
 
 def protocolo_ICMP(data):
     icmph = struct.unpack('!BBH', data)
