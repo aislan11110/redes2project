@@ -12,6 +12,7 @@ def main():
     rip.bind((host, 0))
     rip.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
     rip.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
+
     ipselecionado=selecioneoip()
     x=0
     while x!=-1:
@@ -49,14 +50,17 @@ def printprotocolo(restodosdados,protocolo):
     # print abaixo
     # Pacote TCP
     if protocolo == 6:
-        (porta_fonte, porta_destino, sequencia, reconhecimento, tcph_tamanho) \
-            = protocolo_TCP(restodosdados[:20])
-        data = restodosdados[20:]
+        (porta_fonte, porta_destino, sequencia, reconhecimento,
+         offset,flag_urg,flag_ack,flag_psh,flag_rst,flag_syn,flag_fin) \
+            = protocolo_TCP(restodosdados[:14])
+        data = restodosdados[14:]
         # print abaixo
         print("Pacote TCP:")
         print(
-            "Porta fonte: {}, Porta destino: {}, Sequencia numerica: {}, reconhecimento: {}, Offset: {}".format(
-                porta_fonte, porta_destino, sequencia, reconhecimento, tcph_tamanho))
+            "Porta fonte: {}, Porta destino: {}, Sequencia numerica: {}, reconhecimento: {}, Offset: {} "
+            ", flag URG: {}"
+            ", flag ACK: {}, flag PSH: {}, flag RST: {}, flag SYN: {}, flag FIN: {}".format(
+                porta_fonte, porta_destino, sequencia, reconhecimento, offset,flag_urg,flag_ack,flag_psh,flag_rst,flag_syn,flag_fin))
         print()
         print(data)
 
@@ -104,22 +108,26 @@ def printprotocolo(restodosdados,protocolo):
 
     else:
         print("protocolo diferente de TCP/UDP/ICMP/SCTP/IGMP")
+    print()
+    print()
+    print()
 
 
 
 def protocolo_TCP(data):
-    tcph = struct.unpack('!HHLLBBHHH', data)
-
-    porta_fonte = tcph[0]
-    porta_destino = tcph[1]
-    sequencia = tcph[2]
-    reconhecimento = tcph[3]
-    offset_reservado = tcph[4]
-    tcph_tamanho = offset_reservado >> 4
-    return porta_fonte,porta_destino,sequencia,reconhecimento, tcph_tamanho   #tcph_tamanho= offset errei!
+    (porta_fonte,porta_destino,sequencia,reconhecimento,offset_reservado_flags)= struct.unpack('!H H L L H', data[:14])
+    offset = (offset_reservado_flags >> 12) * 4
+    flag_urg = (offset_reservado_flags & 32) >> 5
+    flag_ack = (offset_reservado_flags & 16) >> 4
+    flag_psh = (offset_reservado_flags & 8) >> 3
+    flag_rst = (offset_reservado_flags & 4) >> 2
+    flag_syn = (offset_reservado_flags & 2) >> 1
+    flag_fin = offset_reservado_flags & 1
+    return porta_fonte,porta_destino,sequencia,reconhecimento,offset,flag_urg,flag_ack,flag_psh,flag_rst,flag_syn,flag_fin
 
 def protocolo_ICMP(data):
     icmph = struct.unpack('!BBH', data)
+
     icmp_tipo = icmph[0]
     codigo = icmph[1]
     checksum = icmph[2]
@@ -153,6 +161,7 @@ def protocolo_SCTP(data):
 
 def ipv4(data):
     iph= struct.unpack('!BBHHHBBH4s4s', data)
+
     versão_ihl = iph[0]
     versão = versão_ihl >> 4
     ihl = versão_ihl & 0xF
@@ -170,6 +179,7 @@ def frame_ethernet(data):
     eth_length = 14
     eth_header = data[:eth_length]
     eth = struct.unpack('! 6s 6s H', eth_header)
+
     protocolo_ethernet = socket.htons(eth[2])
     destino_mac = get_mac_addr(data[0:6])
     source_mac =  get_mac_addr(data[6:12])
@@ -183,7 +193,7 @@ def get_mac_addr(bytes_addr):
 def selecioneoip():
     while True:
      ipselecionado = input('digite um ip:')
-     if ipselecionado=='' :
+     if ipselecionado=='':
          return ''
      elif(ipverified(ipselecionado)==False):
          ipselecionado = input('digite um ip:')
